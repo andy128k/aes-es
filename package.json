@@ -11,7 +11,7 @@
     "jasmine-core": "^3.2.1",
     "karma": "^0.13.15",
     "karma-chrome-launcher": "^0.2.1",
-    "karma-commonjs": "0.0.13",
+    "karma-commonjs": "1.0.0",
     "karma-jasmine": "^1.1.2"
   },
   "main": "src/index.js",
