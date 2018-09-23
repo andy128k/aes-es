@@ -10,7 +10,7 @@
     "jasmine": "^2.3.2",
     "jasmine-core": "^3.2.1",
     "karma": "^0.13.15",
-    "karma-chrome-launcher": "^0.2.1",
+    "karma-chrome-launcher": "^2.2.0",
     "karma-commonjs": "0.0.13",
     "karma-jasmine": "^1.1.2"
   },
