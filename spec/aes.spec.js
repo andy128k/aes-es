@@ -1,46 +1,127 @@
+const { createCipheriv } = require('node:crypto');
 const aes = require('..');
 
-function makeCrypter(options) {
-  switch (options.modeOfOperation) {
-  case 'ecb':
-    return new aes.ECB(options.key);
-  case 'cfb':
-    return new aes.CFB(options.key, options.iv, options.segmentSize);
-  case 'ofb':
-    return new aes.OFB(options.key, options.iv);
-  case 'cbc':
-    return new aes.CBC(options.key, options.iv);
-  case 'ctr':
-    return new aes.CTR(options.key, new aes.Counter(0));
-  default:
-    throw new Error('unknwon mode of operation');
-  }
-}
+const ROUNDS = [1, 2, 3, 4, 5];
 
-const testVectors = require('./fixtures/test-vectors.js');
+describe.each(ROUNDS)('Compare with built-in implementation (Round %i)', () => {
+  const randomByte = () => Math.floor(Math.random() * 256);
+  const randomArray = (length) => Array.from({ length }).map(randomByte);
 
-describe('Examples', function() {
-  testVectors.forEach(function(options) {
-    it('test-' + options.modeOfOperation + '-' + options.key.length, function() {
-      const encrypter = makeCrypter(options);
-      const decrypter = makeCrypter(options);
+  const encryptArray = (cipher, plaintext) => {
+    let result = new Uint8Array(plaintext.length);
+    cipher.update(Buffer.from(plaintext)).copy(result);
+    cipher.final().copy(result, result.length);
+    return [...result];
+  };
 
-      for (let i = 0; i < options.plaintext.length; i++) {
-        const plaintext = options.plaintext[i].slice();
-        const ciphertext = options.encrypted[i].slice();
-        const encrypted = new Array(plaintext.length);
-        const decrypted = new Array(ciphertext.length);
+  const KEY_SIZES = [128, 192, 256];
 
-        encrypter.encrypt(plaintext, encrypted);
-        decrypter.decrypt(ciphertext, decrypted);
+  describe('ECB mode', () => {
+    it.each(KEY_SIZES)('encrypts and decrypts with a key of size %i', (keySize) => {
+      const key = randomArray(keySize / 8 | 0);
+      const plaintext = randomArray(16);
 
-        expect(encrypted).toEqual(ciphertext);
-        expect(decrypted).toEqual(plaintext);
+      const encrypted = new Array(plaintext.length);
+      new aes.ECB(key).encrypt(plaintext, encrypted);
+      expect(encrypted).toEqual(encryptArray(createCipheriv(`aes-${keySize}-ecb`, Buffer.from(key), null), plaintext));
 
-        // input buffers are not modified
-        expect(options.plaintext[i]).toEqual(plaintext);
-        expect(options.encrypted[i]).toEqual(ciphertext);
+      const decrypted = new Array(encrypted.length);
+      new aes.ECB(key).decrypt(encrypted, decrypted);
+      expect(decrypted).toEqual(plaintext);
+    });
+  });
+
+  describe('CFB mode', () => {
+    it.each(KEY_SIZES)('encrypts and decrypts with a key of size %i in CFB8 mode', (keySize) => {
+      const segmentSize = 1;
+
+      const key = randomArray(keySize / 8 | 0);
+      const iv = randomArray(16);
+      const plaintext = randomArray(16);
+
+      const encrypted = new Array(plaintext.length);
+      new aes.CFB(key, iv, segmentSize).encrypt(plaintext, encrypted);
+      expect(encrypted).toEqual(encryptArray(createCipheriv(`aes-${keySize}-cfb8`, Buffer.from(key), Buffer.from(iv)), plaintext));
+
+      const decrypted = new Array(encrypted.length);
+      new aes.CFB(key, iv, segmentSize).decrypt(encrypted, decrypted);
+      expect(decrypted).toEqual(plaintext);
+    });
+
+    it.each(KEY_SIZES)('encrypts and decrypts with a key of size %i in CFB mode', (keySize) => {
+      const segmentSize = 16;
+
+      const key = randomArray(keySize / 8 | 0);
+      const iv = randomArray(16);
+      const plaintext = randomArray(segmentSize);
+
+      const encrypted = new Array(plaintext.length);
+      new aes.CFB(key, iv, segmentSize).encrypt(plaintext, encrypted);
+      expect(encrypted).toEqual(encryptArray(createCipheriv(`aes-${keySize}-cfb`, Buffer.from(key), Buffer.from(iv)), plaintext));
+
+      const decrypted = new Array(encrypted.length);
+      new aes.CFB(key, iv, segmentSize).decrypt(encrypted, decrypted);
+      expect(decrypted).toEqual(plaintext);
+    });
+  });
+
+  describe('OFB mode', () => {
+    it.each(KEY_SIZES)('encrypts and decrypts with a key of size %i', (keySize) => {
+      const key = randomArray(keySize / 8 | 0);
+      const iv = randomArray(16);
+      const plaintext = randomArray(16);
+
+      const encrypted = new Array(plaintext.length);
+      new aes.OFB(key, iv).encrypt(plaintext, encrypted);
+      expect(encrypted).toEqual(encryptArray(createCipheriv(`aes-${keySize}-ofb`, Buffer.from(key), Buffer.from(iv)), plaintext));
+
+      const decrypted = new Array(encrypted.length);
+      new aes.OFB(key, iv).decrypt(encrypted, decrypted);
+      expect(decrypted).toEqual(plaintext);
+    });
+  });
+
+  describe('CBC mode', () => {
+    it.each(KEY_SIZES)('encrypts and decrypts with a key of size %i', (keySize) => {
+      const key = randomArray(keySize / 8 | 0);
+      const iv = randomArray(16);
+      const plaintext = randomArray(16);
+
+      const encrypted = new Array(plaintext.length);
+      new aes.CBC(key, iv).encrypt(plaintext, encrypted);
+      expect(encrypted).toEqual(encryptArray(createCipheriv(`aes-${keySize}-cbc`, Buffer.from(key), Buffer.from(iv)), plaintext));
+
+      const decrypted = new Array(encrypted.length);
+      new aes.CBC(key, iv).decrypt(encrypted, decrypted);
+      expect(decrypted).toEqual(plaintext);
+    });
+  });
+
+  describe('CTR mode', () => {
+    const LENGTHS = [0, 1, 2, 3, 16, 127, 128, 129, 1500, 10000, 100000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008];
+    const ZERO = Array.from({ length: 16 }).map(() => 0);
+
+    const testCases = () => {
+      let cases = [];
+      for (const keySize of KEY_SIZES) {
+        for (const length of LENGTHS) {
+          cases.push({ keySize, length });
+        }
       }
+      return cases;
+    };
+
+    it.each(testCases())('encrypts and decrypts with a key of size $keySize and length $length', ({ keySize, length }) => {
+      const key = randomArray(keySize / 8 | 0);
+      const plaintext = randomArray(length);
+
+      const encrypted = new Array(plaintext.length);
+      new aes.CTR(key, new aes.Counter(0)).encrypt(plaintext, encrypted);
+      expect(encrypted).toEqual(encryptArray(createCipheriv(`aes-${keySize}-ctr`, Buffer.from(key), Buffer.from(ZERO)), plaintext));
+
+      const decrypted = new Array(encrypted.length);
+      new aes.CTR(key, new aes.Counter(0)).decrypt(encrypted, decrypted);
+      expect(decrypted).toEqual(plaintext);
     });
   });
 });
