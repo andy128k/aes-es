@@ -6,8 +6,7 @@
   },
   "description": "A pure JavaScript implementation of the AES block cipher and all common modes of operation.",
   "devDependencies": {
-    "eslint": "^8.23.0",
-    "eslint-plugin-jest": "^28.2.0",
+    "eslint": "^9.0.0",
     "jest": "^29.0.1",
     "rollup": "^4.0.2"
   },
@@ -15,7 +14,7 @@
   "module": "dist/index.esm.js",
   "scripts": {
     "build": "rollup --config",
-    "lint": "eslint 'src/**/*.mjs' 'spec/**/*.js'",
+    "lint": "eslint",
     "pretest": "rollup --config",
     "test": "jest",
     "prepare": "rollup --config"
