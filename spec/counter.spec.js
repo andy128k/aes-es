@@ -1,4 +1,4 @@
-const {Counter} = require('..');
+const { Counter } = require("..");
 
 function hex(data) {
   const block = new Array(data.length / 2);
@@ -8,14 +8,14 @@ function hex(data) {
   return block;
 }
 
-describe('Counter', () => {
+describe("Counter", () => {
   it.each([
-    [0,   hex('00000000000000000000000000000001')],
-    [1,   hex('00000000000000000000000000000002')],
-    [254, hex('000000000000000000000000000000ff')],
-    [255, hex('00000000000000000000000000000100')],
-    [256, hex('00000000000000000000000000000101')],
-  ])('test-counter-number %#', (number, result) => {
+    [0, hex("00000000000000000000000000000001")],
+    [1, hex("00000000000000000000000000000002")],
+    [254, hex("000000000000000000000000000000ff")],
+    [255, hex("00000000000000000000000000000100")],
+    [256, hex("00000000000000000000000000000101")],
+  ])("test-counter-number %#", (number, result) => {
     let counter = new Counter(number);
     counter.increment();
     expect(counter._counter).toEqual(result);
@@ -31,11 +31,11 @@ describe('Counter', () => {
   });
 
   it.each([
-    [hex('00000000000000000000000000000000'), hex('00000000000000000000000000000001')],
-    [hex('000000000000000000000000000000ff'), hex('00000000000000000000000000000100')],
-    [hex('ffffffffffffffffffffffffffffffff'), hex('00000000000000000000000000000000')],
-    [hex('deadbeefdeadbeefdeadbeefdeadbeef'), hex('deadbeefdeadbeefdeadbeefdeadbef0')],
-  ])('test-counter-bytes %#', (bytes, result) => {
+    [hex("00000000000000000000000000000000"), hex("00000000000000000000000000000001")],
+    [hex("000000000000000000000000000000ff"), hex("00000000000000000000000000000100")],
+    [hex("ffffffffffffffffffffffffffffffff"), hex("00000000000000000000000000000000")],
+    [hex("deadbeefdeadbeefdeadbeefdeadbeef"), hex("deadbeefdeadbeefdeadbeefdeadbef0")],
+  ])("test-counter-bytes %#", (bytes, result) => {
     let counter = new Counter(bytes);
     counter.increment();
     expect(counter._counter).toEqual(result);

@@ -1,45 +1,47 @@
 {
   "name": "aes-es",
   "version": "3.0.0",
+  "description": "A pure JavaScript implementation of the AES block cipher and all common modes of operation.",
+  "keywords": [
+    "aes",
+    "aes-cbc",
+    "aes-cfb",
+    "aes-ctr",
+    "aes-ecb",
+    "aes-ofb",
+    "block",
+    "cipher",
+    "decrypt",
+    "encrypt"
+  ],
   "bugs": {
     "url": "https://github.com/andy128k/aes-es/issues"
   },
-  "description": "A pure JavaScript implementation of the AES block cipher and all common modes of operation.",
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.0.0",
-    "globals": "^17.3.0",
-    "jest": "^30.0.4",
-    "rollup": "^4.0.2"
+  "license": "MIT",
+  "contributors": [
+    "Richard Moore <me@ricmoo.com>",
+    "Andrey Kutejko <andy128k@gmail.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/andy128k/aes-es.git"
   },
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "scripts": {
     "build": "rollup --config",
+    "fmt": "oxfmt",
     "lint": "eslint",
     "pretest": "rollup --config",
     "test": "jest",
     "prepare": "rollup --config"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/andy128k/aes-es.git"
-  },
-  "keywords": [
-    "aes",
-    "aes-ctr",
-    "aes-ofb",
-    "aes-ecb",
-    "aes-cbc",
-    "aes-cfb",
-    "encrypt",
-    "decrypt",
-    "block",
-    "cipher"
-  ],
-  "contributors": [
-    "Richard Moore <me@ricmoo.com>",
-    "Andrey Kutejko <andy128k@gmail.com>"
-  ],
-  "license": "MIT"
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.0",
+    "globals": "^17.3.0",
+    "jest": "^30.0.4",
+    "oxfmt": "^0.73.0",
+    "rollup": "^4.0.2"
+  }
 }

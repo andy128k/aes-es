@@ -5,7 +5,6 @@ AES-ES
 
 A pure JavaScript implementation of the AES block cipher algorithm and all common modes of operation (CBC, CFB, CTR, ECB and OFB).
 
-
 Features
 --------
 
@@ -13,7 +12,6 @@ Features
 - Supports all key sizes (128-bit, 192-bit and 256-bit)
 - Supports all common modes of operation (CBC, CFB, CTR, ECB and OFB)
 - Works in either node.js or web browsers
-
 
 API
 ===
@@ -27,12 +25,13 @@ npm install aes-es
 And to access it from within node, simply add:
 
 ```javascript
-var aesjs = require('aes-es');
+var aesjs = require("aes-es");
 ```
 
 Following examples use [utf8-encoding](https://www.npmjs.com/package/utf8-encoding) to encode text to octets and decode back.
+
 ```javascript
-var utf8 = require('utf8-encoding');
+var utf8 = require("utf8-encoding");
 var encoder = new utf8.TextEncoder();
 var decoder = new utf8.TextDecoder();
 ```
@@ -42,7 +41,6 @@ Data format
 
 All API parameters considered as octet sequences. Any array-like object containing octets (e. g. Array, Uint8Array, Buffer) can be passed.
 
-
 Keys
 ----
 
@@ -51,16 +49,16 @@ All keys must be 128 bits (16 bytes), 192 bits (24 bytes) or 256 bits (32 bytes)
 ```javascript
 // 128-bit, 192-bit and 256-bit keys
 var key_128 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-var key_192 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-               16, 17, 18, 19, 20, 21, 22, 23];
-var key_256 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-               29, 30, 31];
+var key_192 = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+];
+var key_256 = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+  27, 28, 29, 30, 31,
+];
 ```
 
-
 To generate keys from simple-to-remember passwords, consider using a password-based key-derivation function such as [scrypt](https://www.npmjs.com/search?q=scrypt) or [bcrypt](https://www.npmjs.com/search?q=bcrypt).
-
 
 Common Modes of Operation
 -------------------------
@@ -73,7 +71,7 @@ There are several modes of operations, each with various pros and cons. In gener
 var key = encoder.encode("Example128BitKey");
 
 // Convert text to bytes
-var text = 'Text may be any length you wish, no padding is required.';
+var text = "Text may be any length you wish, no padding is required.";
 var textBytes = encoder.encode(text);
 var encryptedBytes = new Uint8Array(textBytes.length);
 
@@ -93,7 +91,6 @@ console.log(decryptedText);
 // "Text may be any length you wish, no padding is required."
 ```
 
-
 ### CBC - Cipher-Block Chaining (recommended)
 
 ```javascript
@@ -103,7 +100,7 @@ var key = encoder.encode("Example128BitKey");
 var iv = encoder.encode("IVMustBe16Bytes.");
 
 // Convert text to bytes
-var text = 'TextMustBe16Byte';
+var text = "TextMustBe16Byte";
 var textBytes = encoder.encode(text);
 
 var aesCbc = new aesjs.CBC(key, iv);
@@ -122,8 +119,7 @@ console.log(decryptedText);
 // "TextMustBe16Byte"
 ```
 
-
-### CFB - Cipher Feedback 
+### CFB - Cipher Feedback
 
 ```javascript
 var key = encoder.encode("Example128BitKey");
@@ -132,7 +128,7 @@ var key = encoder.encode("Example128BitKey");
 var iv = encoder.encode("IVMustBe16Bytes.");
 
 // Convert text to bytes
-var text = 'TextMustBeAMultipleOfSegmentSize';
+var text = "TextMustBeAMultipleOfSegmentSize";
 var textBytes = encoder.encode(text);
 
 // The segment size is optional, and defaults to 1
@@ -152,7 +148,6 @@ console.log(decryptedText);
 // "TextMustBeAMultipleOfSegmentSize"
 ```
 
-
 ### OFB - Output Feedback
 
 ```javascript
@@ -162,7 +157,7 @@ var key = encoder.encode("Example128BitKey");
 var iv = encoder.encode("IVMustBe16Bytes.");
 
 // Convert text to bytes
-var text = 'Text may be any length you wish, no padding is required.';
+var text = "Text may be any length you wish, no padding is required.";
 var textBytes = encoder.encode(text);
 
 var aesOfb = new aesjs.OFB(key, iv);
@@ -181,7 +176,6 @@ console.log(decryptedText);
 // "Text may be any length you wish, no padding is required."
 ```
 
-
 ### ECB - Electronic Codebook (NOT recommended)
 
 This mode is **not** recommended. Since, for a given key, the same plaintext block in produces the same ciphertext block out, this mode of operation can leak data, such as patterns. For more details and examples, see the Wikipedia article, [Electronic Codebook](http://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_Codebook_.28ECB.29).
@@ -190,7 +184,7 @@ This mode is **not** recommended. Since, for a given key, the same plaintext blo
 var key = encoder.encode("Example128BitKey");
 
 // Convert text to bytes
-var text = 'TextMustBe16Byte';
+var text = "TextMustBe16Byte";
 var textBytes = encoder.encode(text);
 
 var aesEcb = new aesjs.ECB(key);
@@ -209,13 +203,10 @@ console.log(decryptedText);
 // "TextMustBe16Byte"
 ```
 
-
-
 Block Cipher
 ------------
 
 You should usually use one of the above common modes of operation. Using the block cipher algorithm directly is also possible using **ECB** as that mode of operation is merely a thin wrapper.
-
 
 Notes
 =====
@@ -223,7 +214,7 @@ Notes
 What is a Key
 -------------
 
-This seems to be a point of confusion for many people new to using encryption. You can think of the key as the *"password"*. However, these algorithms require the *"password"* to be a specific length.
+This seems to be a point of confusion for many people new to using encryption. You can think of the key as the _"password"_. However, these algorithms require the _"password"_ to be a specific length.
 
 With AES, there are three possible key lengths, 128-bit (16 bytes), 192-bit (24 bytes) or 256-bit (32 bytes). When you create an AES object, the key size is automatically detected, so it is important to pass in a key of the correct length.
 
@@ -232,14 +223,14 @@ Often, you wish to provide a password of arbitrary length, for example, somethin
 Here is an example, using the popular (possibly obsolete?) pbkdf2:
 
 ```javascript
-var pbkdf2 = require('pbkdf2');
+var pbkdf2 = require("pbkdf2");
 
-var key_128 = pbkdf2.pbkdf2Sync('password', 'salt', 1, 128 / 8, 'sha512');
-var key_192 = pbkdf2.pbkdf2Sync('password', 'salt', 1, 192 / 8, 'sha512');
-var key_256 = pbkdf2.pbkdf2Sync('password', 'salt', 1, 256 / 8, 'sha512');
+var key_128 = pbkdf2.pbkdf2Sync("password", "salt", 1, 128 / 8, "sha512");
+var key_192 = pbkdf2.pbkdf2Sync("password", "salt", 1, 192 / 8, "sha512");
+var key_256 = pbkdf2.pbkdf2Sync("password", "salt", 1, 256 / 8, "sha512");
 ```
 
-Another possibility, is to use a hashing function, such as SHA256 to hash the password, but this method is vulnerable to [Rainbow Attacks](http://en.wikipedia.org/wiki/Rainbow_table), unless you use a [salt](http://en.wikipedia.org/wiki/Salt_(cryptography)).
+Another possibility, is to use a hashing function, such as SHA256 to hash the password, but this method is vulnerable to [Rainbow Attacks](http://en.wikipedia.org/wiki/Rainbow_table), unless you use a [salt](<http://en.wikipedia.org/wiki/Salt_(cryptography)>).
 
 Performance
 -----------

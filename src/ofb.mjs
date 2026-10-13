@@ -1,13 +1,14 @@
-import {AES} from './aes.mjs';
-import {copyIV} from './iv';
+import { AES } from "./aes.mjs";
+import { copyIV } from "./iv";
 
 /**
  *  Mode Of Operation - Output Feedback (OFB)
  */
 export class OFB {
   constructor(key, iv) {
-    if (iv && iv.length !== 16)
-      {throw new Error('initialation vector iv must be of length 16');}
+    if (iv && iv.length !== 16) {
+      throw new Error("initialation vector iv must be of length 16");
+    }
 
     this.description = "Output Feedback";
     this.name = "ofb";

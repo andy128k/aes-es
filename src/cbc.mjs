@@ -1,5 +1,5 @@
-import {AES} from './aes.mjs';
-import {copyIV} from './iv';
+import { AES } from "./aes.mjs";
+import { copyIV } from "./iv";
 
 function xorBlocks(result, first, second) {
   for (let i = 0; i < result.length; i++) {
@@ -13,7 +13,7 @@ function xorBlocks(result, first, second) {
 export class CBC {
   constructor(key, iv) {
     if (iv && iv.length !== 16) {
-      throw new Error('initialation vector iv must be of length 16');
+      throw new Error("initialation vector iv must be of length 16");
     }
 
     this.description = "Cipher Block Chaining";
@@ -25,10 +25,10 @@ export class CBC {
 
   encrypt(plaintext, result) {
     if (plaintext.length !== 16) {
-      throw new Error('plaintext must be a block of size 16');
+      throw new Error("plaintext must be a block of size 16");
     }
     if (result.length !== 16) {
-      throw new Error('result must be a block of size 16');
+      throw new Error("result must be a block of size 16");
     }
 
     xorBlocks(result, this._lastCipherblock, plaintext);
@@ -38,10 +38,10 @@ export class CBC {
 
   decrypt(ciphertext, result) {
     if (ciphertext.length !== 16) {
-      throw new Error('ciphertext must be a block of size 16');
+      throw new Error("ciphertext must be a block of size 16");
     }
     if (result.length !== 16) {
-      throw new Error('result must be a block of size 16');
+      throw new Error("result must be a block of size 16");
     }
 
     this._aes.decrypt(ciphertext, result);

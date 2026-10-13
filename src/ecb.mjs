@@ -1,4 +1,4 @@
-import {AES} from './aes.mjs';
+import { AES } from "./aes.mjs";
 
 /**
  *  Mode Of Operation - Electonic Codebook (ECB)

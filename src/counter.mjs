@@ -3,7 +3,7 @@
  */
 export class Counter {
   constructor(initialValue = 1) {
-    if (typeof(initialValue) === 'number') {
+    if (typeof initialValue === "number") {
       this._counter = new Array(16);
       this.setValue(initialValue);
     } else {
@@ -12,8 +12,8 @@ export class Counter {
   }
 
   setValue(value) {
-    if (typeof(value) !== 'number') {
-      throw new Error('value must be a number');
+    if (typeof value !== "number") {
+      throw new Error("value must be a number");
     }
 
     for (let index = 15; index >= 0; --index) {
@@ -24,7 +24,7 @@ export class Counter {
 
   setBytes(bytes) {
     if (bytes.length !== 16) {
-      throw new Error('invalid counter bytes size (must be 16)');
+      throw new Error("invalid counter bytes size (must be 16)");
     }
     this._counter = bytes.slice();
   }

@@ -10,15 +10,15 @@ export default [
       sourceType: "module",
       globals: {
         ...globals.es2021,
-      }
+      },
     },
     rules: {
-      "curly": "warn",
+      curly: "warn",
       "no-var": "warn",
-      "camelcase": "warn",
-      "semi": "warn",
+      camelcase: "warn",
+      semi: "warn",
       "no-use-before-define": "warn",
-      "eqeqeq": "warn",
+      eqeqeq: "warn",
       "no-alert": "error",
       "no-unused-vars": "error",
       "no-undef": "error",
@@ -32,8 +32,8 @@ export default [
       globals: {
         ...globals.node,
         ...globals.jest,
-      }
-    }
+      },
+    },
   },
   {
     ignores: ["dist"],
