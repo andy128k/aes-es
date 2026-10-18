@@ -27,21 +27,27 @@
     "url": "git://github.com/andy128k/aes-es.git"
   },
   "type": "module",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "build": "rollup --config",
+    "build": "tsdown",
     "fmt": "oxfmt",
     "lint": "eslint",
-    "pretest": "rollup --config",
+    "typecheck": "tsc",
+    "pretest": "tsdown",
     "test": "node --test",
-    "prepare": "rollup --config"
+    "prepare": "tsdown"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
     "eslint": "^10.0.0",
     "globals": "^17.3.0",
     "oxfmt": "^0.73.0",
-    "rollup": "^4.0.2"
+    "tsdown": "^0.23.1",
+    "typescript": "^7.0.2"
   }
 }
