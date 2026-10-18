@@ -1,6 +1,3 @@
-// Number of rounds by keysize
-const numberOfRounds = { 16: 10, 24: 12, 32: 14 };
-
 // Round constant words
 const rcon = [
   0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f,
@@ -469,7 +466,7 @@ const U4 = [
   0x79b492a7, 0x70b999a9, 0x6bae84bb, 0x62a38fb5, 0x5d80be9f, 0x548db591, 0x4f9aa883, 0x4697a38d,
 ];
 
-function getUint32(octets, index) {
+function getUint32(octets: number[], index: number): number {
   return (
     ((octets[index] & 0xff) << 24) +
     ((octets[index + 1] & 0xff) << 16) +
@@ -478,7 +475,7 @@ function getUint32(octets, index) {
   );
 }
 
-function convertToInt32(bytes) {
+function convertToInt32(bytes: number[]): number[] {
   let result = [];
   for (let i = 0; i < bytes.length; i += 4) {
     result.push(getUint32(bytes, i));
@@ -487,22 +484,34 @@ function convertToInt32(bytes) {
 }
 
 export class AES {
-  constructor(key) {
-    this.key = key;
+  #key: number[];
+  // encryption round keys
+  private _Ke: number[][];
+  // decryption round keys
+  private _Kd: number[][];
+
+  constructor(key: number[]) {
+    this.#key = key;
+    this._Ke = [];
+    this._Kd = [];
     this._prepare();
   }
 
   _prepare() {
-    let rounds = numberOfRounds[this.key.length];
-    if (rounds === null) {
-      throw new Error("invalid key size (must be length 16, 24 or 32)");
+    let rounds;
+    switch (this.#key.length) {
+      case 16:
+        rounds = 10;
+        break;
+      case 24:
+        rounds = 12;
+        break;
+      case 32:
+        rounds = 14;
+        break;
+      default:
+        throw new Error("invalid key size (must be length 16, 24 or 32)");
     }
-
-    // encryption round keys
-    this._Ke = [];
-
-    // decryption round keys
-    this._Kd = [];
 
     for (let i = 0; i <= rounds; i++) {
       this._Ke.push([0, 0, 0, 0]);
@@ -510,10 +519,10 @@ export class AES {
     }
 
     let roundKeyCount = (rounds + 1) * 4;
-    let KC = this.key.length / 4;
+    let KC = this.#key.length / 4;
 
     // convert the key into ints
-    let tk = convertToInt32(this.key);
+    let tk = convertToInt32(this.#key);
 
     // copy values into round key arrays
     let index;
@@ -584,7 +593,7 @@ export class AES {
     }
   }
 
-  encrypt(plaintext, result) {
+  encrypt(plaintext: number[], result: number[]) {
     if (plaintext.length !== 16) {
       throw new Error("plaintext must be a block of size 16");
     }
@@ -621,7 +630,7 @@ export class AES {
     }
   }
 
-  decrypt(ciphertext, result) {
+  decrypt(ciphertext: number[], result: number[]) {
     if (ciphertext.length !== 16) {
       throw new Error("ciphertext must be a block of size 16");
     }

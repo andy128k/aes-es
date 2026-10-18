@@ -1,6 +1,6 @@
 import { describe, it, type TestContext } from "node:test";
 import { createCipheriv, type Cipheriv } from "node:crypto";
-import * as aes from "../src/index.mjs";
+import * as aes from "../src/index.ts";
 
 function* repeat<T>(testCases: Iterable<T>, times: number = 5): Generator<T> {
   for (let round = 1; round <= times; ++round) {

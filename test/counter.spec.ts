@@ -1,5 +1,5 @@
 import { describe, it, type TestContext } from "node:test";
-import { Counter } from "../src/index.mjs";
+import { Counter } from "../src/index.ts";
 
 function hex(data: string): number[] {
   const block = new Array(data.length / 2);
