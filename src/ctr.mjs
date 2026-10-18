@@ -1,5 +1,5 @@
 import { AES } from "./aes.mjs";
-import { Counter } from "./counter";
+import { Counter } from "./counter.mjs";
 
 /**
  *  Mode Of Operation - Counter (CTR)

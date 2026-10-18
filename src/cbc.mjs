@@ -1,5 +1,5 @@
 import { AES } from "./aes.mjs";
-import { copyIV } from "./iv";
+import { copyIV } from "./iv.mjs";
 
 function xorBlocks(result, first, second) {
   for (let i = 0; i < result.length; i++) {

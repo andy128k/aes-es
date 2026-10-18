@@ -11,6 +11,10 @@ export class Counter {
     }
   }
 
+  bytes() {
+    return this._counter;
+  }
+
   setValue(value) {
     if (typeof value !== "number") {
       throw new Error("value must be a number");

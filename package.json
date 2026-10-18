@@ -26,6 +26,7 @@
     "type": "git",
     "url": "git://github.com/andy128k/aes-es.git"
   },
+  "type": "module",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "scripts": {
@@ -33,14 +34,13 @@
     "fmt": "oxfmt",
     "lint": "eslint",
     "pretest": "rollup --config",
-    "test": "jest",
+    "test": "node --test",
     "prepare": "rollup --config"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.0.0",
     "globals": "^17.3.0",
-    "jest": "^30.0.4",
     "oxfmt": "^0.73.0",
     "rollup": "^4.0.2"
   }

@@ -3,4 +3,4 @@ export { CBC } from "./cbc.mjs";
 export { CFB } from "./cfb.mjs";
 export { OFB } from "./ofb.mjs";
 export { CTR } from "./ctr.mjs";
-export { Counter } from "./counter";
+export { Counter } from "./counter.mjs";

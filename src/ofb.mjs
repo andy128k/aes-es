@@ -1,5 +1,5 @@
 import { AES } from "./aes.mjs";
-import { copyIV } from "./iv";
+import { copyIV } from "./iv.mjs";
 
 /**
  *  Mode Of Operation - Output Feedback (OFB)
