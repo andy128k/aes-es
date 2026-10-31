@@ -169,7 +169,7 @@ describe("Compare with built-in implementation", () => {
         const plaintext = randomArray(length);
 
         const encrypted = new Array(plaintext.length);
-        new aes.CTR(key, new aes.Counter(0)).encrypt(plaintext, encrypted);
+        new aes.CTR(key, 0n).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
           encryptArray(
             createCipheriv(`aes-${keySize}-ctr`, new Uint8Array(key), new Uint8Array(ZERO)),
@@ -180,7 +180,7 @@ describe("Compare with built-in implementation", () => {
         );
 
         const decrypted = new Array(encrypted.length);
-        new aes.CTR(key, new aes.Counter(0)).decrypt(encrypted, decrypted);
+        new aes.CTR(key, 0n).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(
           plaintext,
           decrypted,
