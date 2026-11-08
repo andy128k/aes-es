@@ -518,9 +518,8 @@ export class AES {
     let tk = convertToInt32(this.#key);
 
     // copy values into round key arrays
-    let index;
     for (let i = 0; i < KC; i++) {
-      index = i >> 2;
+      const index = i >> 2;
       this._Ke[index][i % 4] = tk[i];
       this._Kd[rounds - index][i % 4] = tk[i];
     }
@@ -539,14 +538,8 @@ export class AES {
         (rcon[rconpointer] << 24);
       rconpointer += 1;
 
-      // key expansion (for non-256 bit)
-      if (KC !== 8) {
-        for (let i = 1; i < KC; i++) {
-          tk[i] ^= tk[i - 1];
-        }
-
+      if (KC === 8) {
         // key expansion for 256-bit keys is "slightly different" (fips-197)
-      } else {
         for (let i = 1; i < KC / 2; i++) {
           tk[i] ^= tk[i - 1];
         }
@@ -561,18 +554,22 @@ export class AES {
         for (let i = KC / 2 + 1; i < KC; i++) {
           tk[i] ^= tk[i - 1];
         }
+      } else {
+        // key expansion (for non-256 bit)
+        for (let i = 1; i < KC; i++) {
+          tk[i] ^= tk[i - 1];
+        }
       }
 
       // copy values into round key arrays
-      let i = 0,
-        r,
-        c;
+      let i = 0;
       while (i < KC && t < roundKeyCount) {
-        r = t >> 2;
-        c = t % 4;
+        const r = t >> 2;
+        const c = t % 4;
         this._Ke[r][c] = tk[i];
-        this._Kd[rounds - r][c] = tk[i++];
+        this._Kd[rounds - r][c] = tk[i];
         t++;
+        i++;
       }
     }
 
