@@ -477,22 +477,15 @@ function convertToInt32(bytes: DataView): number[] {
 }
 
 export class AES {
-  #key: DataView;
-  // encryption round keys
-  private _Ke: number[][];
-  // decryption round keys
-  private _Kd: number[][];
+  #encryptionRoundKeys: number[][];
+  #decryptionRoundKeys: number[][];
 
   constructor(key: DataView) {
-    this.#key = key;
-    this._Ke = [];
-    this._Kd = [];
-    this._prepare();
-  }
+    this.#encryptionRoundKeys = [];
+    this.#decryptionRoundKeys = [];
 
-  _prepare() {
     let rounds;
-    switch (this.#key.byteLength) {
+    switch (key.byteLength) {
       case 16:
         rounds = 10;
         break;
@@ -507,21 +500,21 @@ export class AES {
     }
 
     for (let i = 0; i <= rounds; i++) {
-      this._Ke.push([0, 0, 0, 0]);
-      this._Kd.push([0, 0, 0, 0]);
+      this.#encryptionRoundKeys.push([0, 0, 0, 0]);
+      this.#decryptionRoundKeys.push([0, 0, 0, 0]);
     }
 
     const roundKeyCount = (rounds + 1) * 4;
-    const KC = this.#key.byteLength / 4;
+    const KC = key.byteLength / 4;
 
     // convert the key into ints
-    let tk = convertToInt32(this.#key);
+    let tk = convertToInt32(key);
 
     // copy values into round key arrays
     for (let i = 0; i < KC; i++) {
       const index = i >> 2;
-      this._Ke[index][i % 4] = tk[i];
-      this._Kd[rounds - index][i % 4] = tk[i];
+      this.#encryptionRoundKeys[index][i % 4] = tk[i];
+      this.#decryptionRoundKeys[rounds - index][i % 4] = tk[i];
     }
 
     // key expansion (fips-197 section 5.2)
@@ -566,8 +559,8 @@ export class AES {
       while (i < KC && t < roundKeyCount) {
         const r = t >> 2;
         const c = t % 4;
-        this._Ke[r][c] = tk[i];
-        this._Kd[rounds - r][c] = tk[i];
+        this.#encryptionRoundKeys[r][c] = tk[i];
+        this.#decryptionRoundKeys[rounds - r][c] = tk[i];
         t++;
         i++;
       }
@@ -576,8 +569,8 @@ export class AES {
     // inverse-cipher-ify the decryption round key (fips-197 section 5.3)
     for (let r = 1; r < rounds; r++) {
       for (let c = 0; c < 4; c++) {
-        tt = this._Kd[r][c];
-        this._Kd[r][c] =
+        tt = this.#decryptionRoundKeys[r][c];
+        this.#decryptionRoundKeys[r][c] =
           U1[(tt >> 24) & 0xff] ^ U2[(tt >> 16) & 0xff] ^ U3[(tt >> 8) & 0xff] ^ U4[tt & 0xff];
       }
     }
@@ -588,13 +581,13 @@ export class AES {
       throw new Error("plaintext must be a block of size 16");
     }
 
-    let rounds = this._Ke.length - 1;
+    let rounds = this.#encryptionRoundKeys.length - 1;
     let a = [0, 0, 0, 0];
 
     // convert plaintext to (ints ^ key)
     let t = [];
     for (let i = 0; i < 4; i++) {
-      t.push(getUint32(plaintext, i * 4) ^ this._Ke[0][i]);
+      t.push(getUint32(plaintext, i * 4) ^ this.#encryptionRoundKeys[0][i]);
     }
 
     // apply round transforms
@@ -605,14 +598,14 @@ export class AES {
           T2[(t[(i + 1) % 4] >> 16) & 0xff] ^
           T3[(t[(i + 2) % 4] >> 8) & 0xff] ^
           T4[t[(i + 3) % 4] & 0xff] ^
-          this._Ke[r][i];
+          this.#encryptionRoundKeys[r][i];
       }
       t = a.slice(0);
     }
 
     // the last round is special
     for (let i = 0; i < 4; i++) {
-      let tt = this._Ke[rounds][i];
+      let tt = this.#encryptionRoundKeys[rounds][i];
       result.setUint8(4 * i, (S[(t[i] >> 24) & 0xff] ^ (tt >> 24)) & 0xff);
       result.setUint8(4 * i + 1, (S[(t[(i + 1) % 4] >> 16) & 0xff] ^ (tt >> 16)) & 0xff);
       result.setUint8(4 * i + 2, (S[(t[(i + 2) % 4] >> 8) & 0xff] ^ (tt >> 8)) & 0xff);
@@ -625,12 +618,12 @@ export class AES {
       throw new Error("ciphertext must be a block of size 16");
     }
 
-    let rounds = this._Kd.length - 1;
+    let rounds = this.#decryptionRoundKeys.length - 1;
 
     // convert plaintext to (ints ^ key)
     let t = [];
     for (let i = 0; i < 4; i++) {
-      t.push(getUint32(ciphertext, i * 4) ^ this._Kd[0][i]);
+      t.push(getUint32(ciphertext, i * 4) ^ this.#decryptionRoundKeys[0][i]);
     }
 
     // apply round transforms
@@ -642,14 +635,14 @@ export class AES {
           T6[(t[(i + 3) % 4] >> 16) & 0xff] ^
           T7[(t[(i + 2) % 4] >> 8) & 0xff] ^
           T8[t[(i + 1) % 4] & 0xff] ^
-          this._Kd[r][i];
+          this.#decryptionRoundKeys[r][i];
       }
       t = a;
     }
 
     // the last round is special
     for (let i = 0; i < 4; i++) {
-      let tt = this._Kd[rounds][i];
+      let tt = this.#decryptionRoundKeys[rounds][i];
       result.setUint8(4 * i, (Si[(t[i] >> 24) & 0xff] ^ (tt >> 24)) & 0xff);
       result.setUint8(4 * i + 1, (Si[(t[(i + 3) % 4] >> 16) & 0xff] ^ (tt >> 16)) & 0xff);
       result.setUint8(4 * i + 2, (Si[(t[(i + 2) % 4] >> 8) & 0xff] ^ (tt >> 8)) & 0xff);
