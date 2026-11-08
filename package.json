@@ -1,6 +1,6 @@
 {
   "name": "aes-es",
-  "version": "3.0.0",
+  "version": "4.0.0-alpha.0",
   "description": "A pure JavaScript implementation of the AES block cipher and all common modes of operation.",
   "keywords": [
     "aes",
