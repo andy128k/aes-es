@@ -12,13 +12,20 @@ function* repeat<T>(testCases: Iterable<T>, times: number = 5): Generator<T> {
 
 describe("Compare with built-in implementation", () => {
   const randomByte = (): number => Math.floor(Math.random() * 256);
-  const randomArray = (length: number): number[] => Array.from({ length }).map(randomByte);
 
-  const encryptArray = (cipher: Cipheriv, plaintext: number[]): number[] => {
-    let result = new Uint8Array(plaintext.length);
-    cipher.update(new Uint8Array(plaintext)).copy(result);
+  const randomArray = (length: number): DataView => {
+    const data = new DataView(new ArrayBuffer(length));
+    for (let i = 0; i < length; i += 1) {
+      data.setUint8(i, randomByte());
+    }
+    return data;
+  };
+
+  const encryptArray = (cipher: Cipheriv, plaintext: DataView): DataView => {
+    let result = new Uint8Array(plaintext.byteLength);
+    cipher.update(plaintext).copy(result);
     cipher.final().copy(result, result.length);
-    return [...result];
+    return new DataView(result.buffer);
   };
 
   const KEY_SIZES = [128, 192, 256];
@@ -29,15 +36,15 @@ describe("Compare with built-in implementation", () => {
         const key = randomArray((keySize / 8) | 0);
         const plaintext = randomArray(16);
 
-        const encrypted = new Array(plaintext.length);
+        const encrypted = new DataView(new ArrayBuffer(plaintext.byteLength));
         new aes.ECB(key).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
-          encryptArray(createCipheriv(`aes-${keySize}-ecb`, new Uint8Array(key), null), plaintext),
+          encryptArray(createCipheriv(`aes-${keySize}-ecb`, key, null), plaintext),
           encrypted,
           `key of size ${keySize}`,
         );
 
-        const decrypted = new Array(encrypted.length);
+        const decrypted = new DataView(new ArrayBuffer(encrypted.byteLength));
         new aes.ECB(key).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(plaintext, decrypted, `key of size ${keySize}`);
       }
@@ -53,18 +60,15 @@ describe("Compare with built-in implementation", () => {
         const iv = randomArray(16);
         const plaintext = randomArray(16);
 
-        const encrypted = new Array(plaintext.length);
+        const encrypted = new DataView(new ArrayBuffer(plaintext.byteLength));
         new aes.CFB(key, iv, segmentSize).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
-          encryptArray(
-            createCipheriv(`aes-${keySize}-cfb8`, new Uint8Array(key), new Uint8Array(iv)),
-            plaintext,
-          ),
+          encryptArray(createCipheriv(`aes-${keySize}-cfb8`, key, iv), plaintext),
           encrypted,
           `key of size ${keySize}`,
         );
 
-        const decrypted = new Array(encrypted.length);
+        const decrypted = new DataView(new ArrayBuffer(encrypted.byteLength));
         new aes.CFB(key, iv, segmentSize).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(plaintext, decrypted, `key of size ${keySize}`);
       }
@@ -78,18 +82,15 @@ describe("Compare with built-in implementation", () => {
         const iv = randomArray(16);
         const plaintext = randomArray(segmentSize);
 
-        const encrypted = new Array(plaintext.length);
+        const encrypted = new DataView(new ArrayBuffer(plaintext.byteLength));
         new aes.CFB(key, iv, segmentSize).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
-          encryptArray(
-            createCipheriv(`aes-${keySize}-cfb`, new Uint8Array(key), new Uint8Array(iv)),
-            plaintext,
-          ),
+          encryptArray(createCipheriv(`aes-${keySize}-cfb`, key, iv), plaintext),
           encrypted,
           `key of size ${keySize}`,
         );
 
-        const decrypted = new Array(encrypted.length);
+        const decrypted = new DataView(new ArrayBuffer(encrypted.byteLength));
         new aes.CFB(key, iv, segmentSize).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(plaintext, decrypted, `key of size ${keySize}`);
       }
@@ -103,18 +104,15 @@ describe("Compare with built-in implementation", () => {
         const iv = randomArray(16);
         const plaintext = randomArray(16);
 
-        const encrypted = new Array(plaintext.length);
+        const encrypted = new DataView(new ArrayBuffer(plaintext.byteLength));
         new aes.OFB(key, iv).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
-          encryptArray(
-            createCipheriv(`aes-${keySize}-ofb`, new Uint8Array(key), new Uint8Array(iv)),
-            plaintext,
-          ),
+          encryptArray(createCipheriv(`aes-${keySize}-ofb`, key, iv), plaintext),
           encrypted,
           `key of size ${keySize}`,
         );
 
-        const decrypted = new Array(encrypted.length);
+        const decrypted = new DataView(new ArrayBuffer(encrypted.byteLength));
         new aes.OFB(key, iv).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(plaintext, decrypted, `key of size ${keySize}`);
       }
@@ -128,18 +126,15 @@ describe("Compare with built-in implementation", () => {
         const iv = randomArray(16);
         const plaintext = randomArray(16);
 
-        const encrypted = new Array(plaintext.length);
+        const encrypted = new DataView(new ArrayBuffer(plaintext.byteLength));
         new aes.CBC(key, iv).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
-          encryptArray(
-            createCipheriv(`aes-${keySize}-cbc`, new Uint8Array(key), new Uint8Array(iv)),
-            plaintext,
-          ),
+          encryptArray(createCipheriv(`aes-${keySize}-cbc`, key, iv), plaintext),
           encrypted,
           `key of size ${keySize}`,
         );
 
-        const decrypted = new Array(encrypted.length);
+        const decrypted = new DataView(new ArrayBuffer(encrypted.byteLength));
         new aes.CBC(key, iv).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(plaintext, decrypted, `key of size ${keySize}`);
       }
@@ -168,18 +163,15 @@ describe("Compare with built-in implementation", () => {
         const key = randomArray((keySize / 8) | 0);
         const plaintext = randomArray(length);
 
-        const encrypted = new Array(plaintext.length);
+        const encrypted = new DataView(new ArrayBuffer(plaintext.byteLength));
         new aes.CTR(key, 0n).encrypt(plaintext, encrypted);
         t.assert.deepStrictEqual(
-          encryptArray(
-            createCipheriv(`aes-${keySize}-ctr`, new Uint8Array(key), new Uint8Array(ZERO)),
-            plaintext,
-          ),
+          encryptArray(createCipheriv(`aes-${keySize}-ctr`, key, new Uint8Array(ZERO)), plaintext),
           encrypted,
           `key of size ${keySize} and length ${length}`,
         );
 
-        const decrypted = new Array(encrypted.length);
+        const decrypted = new DataView(new ArrayBuffer(encrypted.byteLength));
         new aes.CTR(key, 0n).decrypt(encrypted, decrypted);
         t.assert.deepStrictEqual(
           plaintext,

@@ -466,31 +466,24 @@ const U4 = [
   0x79b492a7, 0x70b999a9, 0x6bae84bb, 0x62a38fb5, 0x5d80be9f, 0x548db591, 0x4f9aa883, 0x4697a38d,
 ];
 
-function getUint32(octets: number[], index: number): number {
-  return (
-    ((octets[index] & 0xff) << 24) +
-    ((octets[index + 1] & 0xff) << 16) +
-    ((octets[index + 2] & 0xff) << 8) +
-    (octets[index + 3] & 0xff)
-  );
-}
+const getUint32 = (octets: DataView, index: number): number => octets.getUint32(index, false);
 
-function convertToInt32(bytes: number[]): number[] {
+function convertToInt32(bytes: DataView): number[] {
   let result = [];
-  for (let i = 0; i < bytes.length; i += 4) {
+  for (let i = 0; i < bytes.byteLength; i += 4) {
     result.push(getUint32(bytes, i));
   }
   return result;
 }
 
 export class AES {
-  #key: number[];
+  #key: DataView;
   // encryption round keys
   private _Ke: number[][];
   // decryption round keys
   private _Kd: number[][];
 
-  constructor(key: number[]) {
+  constructor(key: DataView) {
     this.#key = key;
     this._Ke = [];
     this._Kd = [];
@@ -499,7 +492,7 @@ export class AES {
 
   _prepare() {
     let rounds;
-    switch (this.#key.length) {
+    switch (this.#key.byteLength) {
       case 16:
         rounds = 10;
         break;
@@ -518,8 +511,8 @@ export class AES {
       this._Kd.push([0, 0, 0, 0]);
     }
 
-    let roundKeyCount = (rounds + 1) * 4;
-    let KC = this.#key.length / 4;
+    const roundKeyCount = (rounds + 1) * 4;
+    const KC = this.#key.byteLength / 4;
 
     // convert the key into ints
     let tk = convertToInt32(this.#key);
@@ -593,8 +586,8 @@ export class AES {
     }
   }
 
-  encrypt(plaintext: number[], result: number[]) {
-    if (plaintext.length !== 16) {
+  encrypt(plaintext: DataView, result: DataView) {
+    if (plaintext.byteLength !== 16) {
       throw new Error("plaintext must be a block of size 16");
     }
 
@@ -623,20 +616,19 @@ export class AES {
     // the last round is special
     for (let i = 0; i < 4; i++) {
       let tt = this._Ke[rounds][i];
-      result[4 * i] = (S[(t[i] >> 24) & 0xff] ^ (tt >> 24)) & 0xff;
-      result[4 * i + 1] = (S[(t[(i + 1) % 4] >> 16) & 0xff] ^ (tt >> 16)) & 0xff;
-      result[4 * i + 2] = (S[(t[(i + 2) % 4] >> 8) & 0xff] ^ (tt >> 8)) & 0xff;
-      result[4 * i + 3] = (S[t[(i + 3) % 4] & 0xff] ^ tt) & 0xff;
+      result.setUint8(4 * i, (S[(t[i] >> 24) & 0xff] ^ (tt >> 24)) & 0xff);
+      result.setUint8(4 * i + 1, (S[(t[(i + 1) % 4] >> 16) & 0xff] ^ (tt >> 16)) & 0xff);
+      result.setUint8(4 * i + 2, (S[(t[(i + 2) % 4] >> 8) & 0xff] ^ (tt >> 8)) & 0xff);
+      result.setUint8(4 * i + 3, (S[t[(i + 3) % 4] & 0xff] ^ tt) & 0xff);
     }
   }
 
-  decrypt(ciphertext: number[], result: number[]) {
-    if (ciphertext.length !== 16) {
+  decrypt(ciphertext: DataView, result: DataView) {
+    if (ciphertext.byteLength !== 16) {
       throw new Error("ciphertext must be a block of size 16");
     }
 
     let rounds = this._Kd.length - 1;
-    let a = [0, 0, 0, 0];
 
     // convert plaintext to (ints ^ key)
     let t = [];
@@ -646,6 +638,7 @@ export class AES {
 
     // apply round transforms
     for (let r = 1; r < rounds; r++) {
+      const a = [0, 0, 0, 0];
       for (let i = 0; i < 4; i++) {
         a[i] =
           T5[(t[i] >> 24) & 0xff] ^
@@ -654,16 +647,16 @@ export class AES {
           T8[t[(i + 1) % 4] & 0xff] ^
           this._Kd[r][i];
       }
-      t = a.slice(0);
+      t = a;
     }
 
     // the last round is special
     for (let i = 0; i < 4; i++) {
       let tt = this._Kd[rounds][i];
-      result[4 * i] = (Si[(t[i] >> 24) & 0xff] ^ (tt >> 24)) & 0xff;
-      result[4 * i + 1] = (Si[(t[(i + 3) % 4] >> 16) & 0xff] ^ (tt >> 16)) & 0xff;
-      result[4 * i + 2] = (Si[(t[(i + 2) % 4] >> 8) & 0xff] ^ (tt >> 8)) & 0xff;
-      result[4 * i + 3] = (Si[t[(i + 1) % 4] & 0xff] ^ tt) & 0xff;
+      result.setUint8(4 * i, (Si[(t[i] >> 24) & 0xff] ^ (tt >> 24)) & 0xff);
+      result.setUint8(4 * i + 1, (Si[(t[(i + 3) % 4] >> 16) & 0xff] ^ (tt >> 16)) & 0xff);
+      result.setUint8(4 * i + 2, (Si[(t[(i + 2) % 4] >> 8) & 0xff] ^ (tt >> 8)) & 0xff);
+      result.setUint8(4 * i + 3, (Si[t[(i + 1) % 4] & 0xff] ^ tt) & 0xff);
     }
   }
 }

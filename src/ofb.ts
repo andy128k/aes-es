@@ -1,40 +1,42 @@
 import { AES } from "./aes.ts";
-import { copyIV } from "./iv.ts";
+import type { Cipher } from "./types.ts";
 
 /**
  *  Mode Of Operation - Output Feedback (OFB)
  */
-export class OFB {
+export class OFB implements Cipher {
   public name: string = "ofb";
   public description: string = "Output Feedback";
 
-  #lastPrecipher: number[];
+  #lastPrecipher: DataView;
   #lastPrecipherIndex: number;
   #aes: AES;
 
-  constructor(key: number[], iv: number[]) {
-    if (iv && iv.length !== 16) {
+  constructor(key: DataView, iv?: DataView | undefined) {
+    if (iv && iv.byteLength !== 16) {
       throw new Error("initialation vector iv must be of length 16");
     }
 
-    this.#lastPrecipher = copyIV(iv);
+    this.#lastPrecipher = new DataView(iv ? iv.buffer.slice() : new ArrayBuffer(16));
     this.#lastPrecipherIndex = 16;
     this.#aes = new AES(key);
   }
 
-  encrypt(plaintext: number[], result: number[]) {
-    for (let i = 0; i < plaintext.length; i++) {
+  encrypt(plaintext: DataView, result: DataView) {
+    for (let i = 0; i < plaintext.byteLength; i++) {
       if (this.#lastPrecipherIndex === 16) {
         this.#aes.encrypt(this.#lastPrecipher, this.#lastPrecipher);
         this.#lastPrecipherIndex = 0;
       }
-      result[i] = plaintext[i] ^ this.#lastPrecipher[this.#lastPrecipherIndex];
+      result.setUint8(
+        i,
+        plaintext.getUint8(i) ^ this.#lastPrecipher.getUint8(this.#lastPrecipherIndex),
+      );
       this.#lastPrecipherIndex++;
     }
   }
 
-  // Decryption is symetric
-  decrypt(plaintext: number[], result: number[]) {
-    return this.encrypt(plaintext, result);
+  decrypt(ciphertext: DataView, result: DataView) {
+    return this.encrypt(ciphertext, result);
   }
 }

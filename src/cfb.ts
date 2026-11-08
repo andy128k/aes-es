@@ -1,77 +1,87 @@
 import { AES } from "./aes.ts";
-import { copyIV } from "./iv.ts";
+import type { Cipher } from "./types.ts";
+
+// Shift the register
+const shift = (register: DataView, data: DataView): void => {
+  const newBytes = data.byteLength;
+  const oldBytes = register.byteLength - newBytes;
+  for (let i = 0; i < oldBytes; i += 1) {
+    register.setUint8(i, register.getUint8(i + newBytes));
+  }
+  for (let i = 0; i < newBytes; i += 1) {
+    register.setUint8(oldBytes + i, data.getUint8(i));
+  }
+};
 
 /**
  *  Mode Of Operation - Cipher Feedback (CFB)
  */
-export class CFB {
+export class CFB implements Cipher {
   public name: string = "cfb";
   public description: string = "Cipher Feedback";
 
   #segmentSize: number;
-  #shiftRegister: number[];
+  #shiftRegister: DataView;
   #aes: AES;
 
-  constructor(key: number[], iv: number[], segmentSize: number) {
-    if (iv && iv.length !== 16) {
+  constructor(key: DataView, iv?: DataView | undefined, segmentSize?: number | undefined) {
+    if (iv && iv.byteLength !== 16) {
       throw new Error("initialation vector iv must be of length 16");
     }
-    this.#segmentSize = segmentSize || 1;
-    this.#shiftRegister = copyIV(iv);
+    this.#segmentSize = segmentSize ?? 1;
+    this.#shiftRegister = new DataView(iv ? iv.buffer.slice() : new ArrayBuffer(16));
     this.#aes = new AES(key);
   }
 
-  encrypt(plaintext: number[], result: number[]) {
-    if (plaintext.length % this.#segmentSize !== 0) {
+  encrypt(plaintext: DataView, result: DataView) {
+    if (plaintext.byteLength % this.#segmentSize !== 0) {
       throw new Error(
         "plaintext must be a block of size module segmentSize (" + this.#segmentSize + ")",
       );
     }
-    if (result.length % this.#segmentSize !== 0) {
+    if (result.byteLength % this.#segmentSize !== 0) {
       throw new Error(
         "result must be a block of size module segmentSize (" + this.#segmentSize + ")",
       );
     }
 
-    const xorSegment = new Array(16);
-    for (let i = 0; i < plaintext.length; i += this.#segmentSize) {
+    const xorSegment = new DataView(new ArrayBuffer(16));
+    for (let i = 0; i < plaintext.byteLength; i += this.#segmentSize) {
       this.#aes.encrypt(this.#shiftRegister, xorSegment);
       for (let j = 0; j < this.#segmentSize; j++) {
-        result[i + j] = plaintext[i + j] ^ xorSegment[j];
+        result.setUint8(i + j, plaintext.getUint8(i + j) ^ xorSegment.getUint8(j));
       }
 
-      // Shift the register
-      this.#shiftRegister.splice(0, this.#segmentSize);
-      for (let j = 0; j < this.#segmentSize; ++j) {
-        this.#shiftRegister.push(result[i + j]);
-      }
+      shift(
+        this.#shiftRegister,
+        new DataView(result.buffer, result.byteOffset + i, this.#segmentSize),
+      );
     }
   }
 
-  decrypt(ciphertext: number[], result: number[]) {
-    if (ciphertext.length % this.#segmentSize !== 0) {
+  decrypt(ciphertext: DataView, result: DataView) {
+    if (ciphertext.byteLength % this.#segmentSize !== 0) {
       throw new Error(
         "ciphertext must be a block of size module segmentSize (" + this.#segmentSize + ")",
       );
     }
-    if (result.length % this.#segmentSize !== 0) {
+    if (result.byteLength % this.#segmentSize !== 0) {
       throw new Error(
         "result must be a block of size module segmentSize (" + this.#segmentSize + ")",
       );
     }
 
-    const xorSegment = new Array(16);
-    for (let i = 0; i < ciphertext.length; i += this.#segmentSize) {
+    const xorSegment = new DataView(new ArrayBuffer(16));
+    for (let i = 0; i < ciphertext.byteLength; i += this.#segmentSize) {
       this.#aes.encrypt(this.#shiftRegister, xorSegment);
       for (let j = 0; j < this.#segmentSize; j++) {
-        result[i + j] = ciphertext[i + j] ^ xorSegment[j];
+        result.setUint8(i + j, ciphertext.getUint8(i + j) ^ xorSegment.getUint8(j));
       }
 
-      // Shift the register
-      this.#shiftRegister.splice(0, this.#segmentSize);
-      for (let j = 0; j < this.#segmentSize; ++j) {
-        this.#shiftRegister.push(ciphertext[i + j]);
-      }
+      shift(
+        this.#shiftRegister,
+        new DataView(ciphertext.buffer, ciphertext.byteOffset + i, this.#segmentSize),
+      );
     }
   }
 }
